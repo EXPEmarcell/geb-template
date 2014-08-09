@@ -7,8 +7,8 @@ class WikipediaEnHomePage extends geb.Page {
   static content = {
     topBanner { $("#mp-topbanner") }
     searchForm { $("form#searchform") }
-    searchInput { searchForm.find("input", name:"search") }
-    searchSubmit { searchForm.find("input", name:"go") }
+    searchInput { searchForm.search() }
+    searchSubmit { searchForm.go() }
   }
 
 }
