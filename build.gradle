@@ -2,6 +2,8 @@ apply plugin:'java'
 apply plugin:'groovy'
 apply plugin:'application'
 
+def groovyVersion = "2.3.3"
+
 repositories {
   mavenLocal()
   mavenCentral()
@@ -13,8 +15,20 @@ dependencies {
   compile("org.seleniumhq.selenium:selenium-chrome-driver:[2.41, 2.42)")
   compile("com.github.detro:phantomjsdriver:[1.2,1.3)")
   compile("org.seleniumhq.selenium:selenium-support:[2.41, 2.42)")
-  compile localGroovy() // Use whatver version of Groovy we have
-  test "org.spockframework:spock-core:0.7-groovy-2.0"
+  compile "org.codehaus.groovy:groovy-all:$groovyVersion"
+  testCompile("org.gebish:geb-spock:[0.9.3,0.10)")
+  testCompile "org.spockframework:spock-core:0.7-groovy-2.0"
 }
 
+configurations.all {
+  resolutionStrategy {
+    force "org.codehaus.groovy:groovy-all:$groovyVersion"
+  }
+}
+
+System.properties["webdriver.chrome.driver"] = "./chrome-driver/mac"
+
 mainClassName = "com.webonise.geb.GebRunner"
+
+tasks.run.systemProperties = System.properties
+tasks.run.jvmArgs = ["-Xss64m"]

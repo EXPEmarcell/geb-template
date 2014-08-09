@@ -1,0 +1,4 @@
+to WikipediaEnHomePage
+searchInput << "Robert Fischer"
+searchSubmit.click()
+assert $("a", title:"Bobby Fischer"): "Could not find Bobby Fischer in Wikipedia"

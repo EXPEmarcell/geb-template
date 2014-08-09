@@ -27,7 +27,7 @@ class GebRunner {
   /**
   * The path to the configuration files and the scripts
   */
-  File path = new File("src/test/geb").absoluteFile
+  File path = new File("src/run/geb").absoluteFile
 
   Object fileNameFilter = ~/.*\.geb/
 
