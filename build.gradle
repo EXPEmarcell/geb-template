@@ -26,9 +26,6 @@ configurations.all {
   }
 }
 
-System.properties["webdriver.chrome.driver"] = "./chrome-driver/mac"
-
 mainClassName = "com.webonise.geb.GebRunner"
 
 tasks.run.systemProperties = System.properties
-tasks.run.jvmArgs = ["-Xss64m"]
