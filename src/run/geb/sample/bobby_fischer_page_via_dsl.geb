@@ -1,0 +1,2 @@
+searchWikipediaEn("Robert Fischer")
+assert $("a", title:"Bobby Fischer"): "Could not find Bobby Fischer in Wikipedia"

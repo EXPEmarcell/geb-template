@@ -83,32 +83,36 @@ class GebRunner {
     GroovyShell sh = groovyShell
     Configuration config = configuration
 
-    path.traverse(
-      type: FileType.FILES,
-      nameFilter: fileNameFilter,
-      preDir: { System.out.println("$it => Enter") },
-      preDirRoot: true,
-      postDir: { System.out.println("$it => Exit") },
-      postDirRoot: true
-    ) { File file ->
-      System.out.println(file.absolutePath)
+    Browser b = new Browser(config)
+    GebRunnerDsl dsl = new GebRunnerDsl(b)
 
-      DelegatingScript script = (DelegatingScript)sh.parse(file)
+    try {
+      path.traverse(
+        type: FileType.FILES,
+        nameFilter: fileNameFilter,
+        preDir: { System.out.println("$it => Enter") },
+        preDirRoot: true,
+        postDir: { System.out.println("$it => Exit") },
+        postDirRoot: true
+      ) { File file ->
+        System.out.println(file.absolutePath)
 
-      Browser b = new Browser(config)
-      try {
-        b.clearCookiesQuietly()
-        script.setDelegate(b)
-        script.run()
-        System.out.println(file.absolutePath  + " => SUCCESS!")
-      } catch(Exception e) {
-        System.out.println(file.absolutePath  + " => FAILURE!")
-        System.out.println("<<<")
-        e.printStackTrace(System.out)
-        System.out.println(">>>")
-      } finally {
-        b.quit()
+        DelegatingScript script = (DelegatingScript)sh.parse(file)
+
+        try {
+          b.clearCookiesQuietly()
+          script.setDelegate(dsl)
+          script.run()
+          System.out.println(file.absolutePath  + " => SUCCESS!")
+        } catch(Exception e) {
+          System.out.println(file.absolutePath  + " => FAILURE!")
+          System.out.println("<<<")
+          e.printStackTrace(System.out)
+          System.out.println(">>>")
+        }
       }
+    } finally {
+      b.quit()
     }
   }
 
