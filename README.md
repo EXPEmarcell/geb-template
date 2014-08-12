@@ -1,9 +1,9 @@
 Geb Template
 =============
 
-A template project for the [Geb](http://gebish.org) Selenium wrapper using Gradle.
+This is the template project for the [Geb](http://gebish.org) Selenium wrapper using Gradle.
 This is not a project for when you want to use Geb to test your existing code; this is a project
-for when the goal is to write Geb that will execute.
+for when the goal is to write Geb that will execute against some external application.
 
 Basic Usage
 =============
