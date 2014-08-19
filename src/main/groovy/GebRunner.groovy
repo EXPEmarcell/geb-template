@@ -1,11 +1,15 @@
 package com.webonise.geb
 
+import java.util.regex.Pattern
+
 import groovy.io.FileType
 import groovy.transform.Canonical
 import groovy.transform.CompileStatic
 import geb.Browser
 import geb.Configuration
 import geb.ConfigurationLoader
+import geb.Page
+import geb.PageChangeListener
 import groovy.util.DelegatingScript
 import org.codehaus.groovy.control.CompilerConfiguration
 
@@ -27,24 +31,17 @@ class GebRunner {
   /**
   * The path to the configuration files and the scripts
   */
-  File path = new File("src/run/geb").absoluteFile
-
-  Object fileNameFilter = ~/.*\.geb/
+  File path = new File("src/run/geb")
 
   /**
-  * Overload the {@code classLoader} setter to support generic Java classloaders
+  * Filter for Geb files
   */
-  void setClassLoader(ClassLoader classLoader) {
-    assert classLoader : "Attempted to set classloader to null"
-    this.classLoader = new GroovyClassLoader(classLoader)
-  }
+  Pattern fileNameFilter = ~/.*\.geb/
 
   /**
-  * Overload the {@code path} setter to support strings
+  * The requested file to execute
   */
-  void setPath(String pathString) {
-    path = new File(pathString).absoluteFile
-  }
+  String requestedFileName = null
 
   /**
   * Provides the URL of the Geb Configuration
@@ -81,47 +78,72 @@ class GebRunner {
   */
   void run() {
     GroovyShell sh = groovyShell
-    Configuration config = configuration
 
-    Browser b = new Browser(config)
-    GebRunnerDsl dsl = new GebRunnerDsl(b)
+    Map<File,DelegatingScript> scripts = [:]
 
+    Browser b = null
     try {
       path.traverse(
         type: FileType.FILES,
         nameFilter: fileNameFilter,
-        preDir: { System.out.println("$it => Enter") },
+        preDir: { System.out.println("$it => Parse Enter") },
         preDirRoot: true,
-        postDir: { System.out.println("$it => Exit") },
+        postDir: { System.out.println("$it => Parse Exit") },
         postDirRoot: true
       ) { File file ->
-        System.out.println(file.absolutePath)
+        System.out.println("$file => Parsing script")
+        scripts[file] = sh.parse(file)
+        System.out.println("$file => Parsed script")
+      }
 
-        DelegatingScript script = (DelegatingScript)sh.parse(file)
+      Configuration config = configuration
+      b = new Browser(config)
+      b.registerPageChangeListener({ Browser browser, Page oldPage, Page newPage ->
+        if(!oldPage) {
+          System.out.println("\tStarted browser")
+        } else {
+          System.out.println("\tBrowsed from $oldPage to $newPage")
+        }
+      } as PageChangeListener)
+      GebRunnerDsl dsl = new GebRunnerDsl(b)
 
+      scripts.each { File file, DelegatingScript script ->
         try {
-          b.clearCookiesQuietly()
-          script.setDelegate(dsl)
-          script.run()
-          System.out.println(file.absolutePath  + " => SUCCESS!")
+          System.out.println("$file => Setup script")
+          (b.availableWindows as List).tail()?.each { String window ->
+            b.withWindow(window) {
+              b.close()
+            }
+          }
+          b.withWindow(b.availableWindows[0]) {
+            b.driver.manage().window().maximize()
+            b.clearCookiesQuietly()
+            if(requestedFileName && !file.absolutePath.toLowerCase().contains(requestedFileName.toLowerCase())) {
+              System.out.println("$file => Not requested -- looking for: $requestedFileName")
+            } else {
+              System.out.println("$file => Running script")
+              script.setDelegate(dsl)
+              script.run()
+              System.out.println("$file => SUCCESS!")
+            }
+          }
         } catch(Exception e) {
-          System.out.println(file.absolutePath  + " => FAILURE!")
+          System.out.println("$file => FAILURE!")
           System.out.println("<<<")
           e.printStackTrace(System.out)
           System.out.println(">>>")
         }
       }
     } finally {
-      b.quit()
+      b?.quit()
     }
   }
 
   static void main(String[] args) {
-    String env = "development"
-    if(args && args.length > 1 && args[0]) env = args[0]
-
     GebRunner runner = new GebRunner()
-    runner.environment = env
+    runner.environment = System.properties["env"] ?: runner.environment
+    runner.path = new File(System.properties["dir"] ?: runner.path.absolutePath)
+    runner.requestedFileName = System.properties["file"] ?: null
     runner.run()
   }
 

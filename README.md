@@ -27,6 +27,20 @@ If that made no sense to you, check out the following resources:
 * `./src/run/geb/sample/bobby_fischer_page.geb`
 * `./src/run/geb/sample/bobby_fischer_page_via_dsl.geb`
 
+Run Customization
+==================
+
+You customize the runs by setting Java system properties. (Java system properties are _NOT_ the same as environment variables.) You set the
+Java system properties for the run by passing in `-Dpropname=propvalue`. So, if you want to set the `env` variable to `foo`, you would pass
+in the argument `-Denv=foo`.
+
+Here are the variables you can set. They are all set to reasonable defaults and may be safely ignored.
+
+* `env` -- The environment name, which is passed into Geb for configuration purposes.
+* `dir` -- The directory where to look for Geb files.
+* `file` -- A case-insensitive substring that the script's absolute path must contain in order for the script to be executed. So you can pass in
+`/sample/` to run everything in the sample directory, or `myscript.geb` to run any script whose filename is `myscript.geb`.
+
 Advanced Usage
 ==============
 
